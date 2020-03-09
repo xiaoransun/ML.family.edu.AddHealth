@@ -8,34 +8,41 @@ output: html_document
 The Steps include:
 1. Loading packages used, setting work directory, and loading raw data in your environment.
 2. Selecting and creating family-related variables from Wave I, as the features/predictors that will be used in next-step analysis with machine learning.
-3. Handling missing data and sample weighting.
-4. Selecting and creating the outcome variables (i.e., college enrollment and college completion).
+3. Selecting and creating the outcome variables (i.e., college enrollment and college completion).
+4. Handling missing data and sample weighting.
 5. Preliminary analysis for descriptives (weighted).
 
 
 ## 1. Loading packages, setting work directory, and loading raw data
 ```{r}
 #install required packages if not in the environment
-list.of.packages <- c("foreign", "psych")
+list.of.packages <- c("foreign", "SDMTools", "weights")
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)) install.packages(new.packages)
 
 #loading required packages
 library(foreign)
-library(psych)
+library(SDMTools)
+library(weights)
 
 #setting work directory
 ##setwd("~/Desktop/paper/SunProjects/Add Health") #Xiaoran's work directory; please set your own.
 
 #loading raw data
 ##reading in Wave 1 In-Home Interview Data
-load("Wave1InHome.rda")
+load("Wave1InHome.rda")  #R version
 wave1<-da21600.0001
-spss1<-data.frame(read.spss("21600-0001-Data.sav"))
+spss1<-data.frame(read.spss("21600-0001-Data.sav")) #SPSS version
 dat1<-wave1[c("AID")] #create this data called 'dat1', where all the cleaned variables will be stored
                       #6504 observations
-##
 
+#loading Wave 4 data
+load("Wave4InHome.rda")
+wave4<-da21600.0022
+
+#loading Wave 4 weights
+load("Wave4Weights.rda") #Use Wave IV weights instead of Wave I weights. See example w/ Wave III data: Perreira, Krista M.; Harris, Kathleen Mullan; & Lee, Dohoon. (2006).
+Wave4Weights<-da21600.0031
 ```
 
 ## 2. Selecting and creating family-related variables from Wave I
@@ -46,6 +53,8 @@ The variables (in total, 55) include:
 * Parental involvement with education (7 variables);
 * Family sociocultural characteristics (10 variables);
 * Family health resources and behaviors (11 variables).
+
+In the meantime, mean imputation for skip pattern missingness in these variables.
 
 ### Family and adolescent demographic characteristics
 Resident mother/father presence
@@ -238,70 +247,68 @@ dat1$PAeconhard<-PAeconhard
 ```
 
 ### Family and parent-adolescent relationship characteristics
-______________________________________________________________________
-
-parental involvement with schoolwork
-* no mom/dad = mean
+family social support (Ryabov, 2016)
 ```{r}
-minvolve1<-as.numeric(substr(wave1$H1WP17H, start = 2, stop = 2))
-minvolve2<-as.numeric(substr(wave1$H1WP17I, start = 2, stop = 2))
-minvolve3<-as.numeric(substr(wave1$H1WP17J, start = 2, stop = 2))
-minvolve<-minvolve1+minvolve2+minvolve3
-mean(minvolve, na.rm = TRUE)
-minvolve[which(as.numeric(spss1$H1WP17H)==4)]<-1.280745 #no mom
-summary(as.factor(minvolve))
+levels(wave1$H1PR3)
+levels(wave1$H1PR5)
+levels(wave1$H1PR7)
+levels(wave1$H1PR8)
+famsup1<-as.numeric(substr(wave1$H1PR3, start = 2, stop = 2))
+famsup1[which(famsup1==6)]<-NA #"does not apply"
+famsup2<-as.numeric(substr(wave1$H1PR5, start = 2, stop = 2))
+famsup2[which(famsup2==6)]<-NA #"does not apply"
+famsup3<-as.numeric(substr(wave1$H1PR7, start = 2, stop = 2))
+famsup3[which(famsup3==6)]<-NA #"does not apply"
+famsup4<-as.numeric(substr(wave1$H1PR8, start = 2, stop = 2))
+famsup4[which(famsup4==6)]<-NA #"does not apply"
 
-dinvolve1<-as.numeric(substr(wave1$H1WP18H, start = 2, stop = 2))
-dinvolve2<-as.numeric(substr(wave1$H1WP18I, start = 2, stop = 2))
-dinvolve3<-as.numeric(substr(wave1$H1WP18J, start = 2, stop = 2))
-dinvolve<-dinvolve1+dinvolve2+dinvolve3
-mean(dinvolve, na.rm = TRUE)
-dinvolve[which(as.numeric(spss1$H1WP18H)==4)]<- 1.068472 #no dad
-summary(as.factor(dinvolve))
-
-dat1$minvolve<-minvolve
-dat1$dinvolve<-dinvolve
+famsup<-rowMeans(cbind(famsup1, famsup2, famsup3, famsup4), na.rm = TRUE)
+dat1$famsup<-famsup
 ```
 
-parent involvement in PTA
+Shared dinner with parents
+*no resident parent = mean
 ```{r}
-levels(wave1$PA27A)
-PAPTA<-as.numeric(substr(wave1$PA27A, start = 2, stop = 2))
-dat1$PAPTA<-PAPTA
+levels(spss1$H1WP8)
+dinner<-as.numeric(substr(wave1$H1WP8, start = 2, stop = 2)) 
+mean(dinner, na.rm=TRUE)
+dinner[which(as.numeric(spss1$H1WP8)==10)]<-4.608819
+dat1$dinner<-dinner
 ```
 
-Parent in school fund-raising
+intergenerational closure
 ```{r}
-levels(spss1$PC28)
-PAfund<-as.numeric(substr(wave1$PC28, start = 2, stop = 2))
-dat1$PAfund<-PAfund
+levels(wave1$PC17)
+PAclosure<-as.numeric(substr(wave1$PC17, start = 2, stop = 2))
+dat1$PAclosure<-PAclosure
 ```
 
-Parent met teachers
+Mother/father-adolescent relationship quality
 ```{r}
-levels(wave1$PC27)
-PAteacher<-as.numeric(substr(wave1$PC27, start = 2, stop = 2))
-dat1$PAteacher<-PAteacher
+mrel1<-as.numeric(substr(wave1$H1WP9, start = 2, stop = 2))
+mrel2<-as.numeric(substr(wave1$H1WP10, start = 2, stop = 2))
+mrel3<-6-as.numeric(substr(wave1$H1PF1, start = 2, stop = 2))
+mrel4<-6-as.numeric(substr(wave1$H1PF4, start = 2, stop = 2))
+mrel5<-6-as.numeric(substr(wave1$H1PF5, start = 2, stop = 2))
+mrel<-rowMeans(cbind(mrel1, mrel2, mrel3, mrel4, mrel5), na.rm = TRUE)
+mean(mrel, na.rm=TRUE)
+mrel[which(as.numeric(spss1$H1WP9)==7)]<-4.430109 #no mom
+
+drel1<-as.numeric(substr(wave1$H1WP13, start = 2, stop = 2))
+drel2<-as.numeric(substr(wave1$H1WP14, start = 2, stop = 2))
+drel3<-6-as.numeric(substr(wave1$H1PF23, start = 2, stop = 2))
+drel4<-6-as.numeric(substr(wave1$H1PF24, start = 2, stop = 2))
+drel5<-6-as.numeric(substr(wave1$H1PF25, start = 2, stop = 2))
+drel<-rowMeans(cbind(drel1, drel2, drel3, drel4, drel5), na.rm = TRUE)
+mean(drel, na.rm=TRUE)
+drel[which(as.numeric(spss1$H1WP13)==7)]<-4.243704
+
+dat1$mrel<-mrel
+dat1$drel<-drel
 ```
 
-Adolescents' perceptions of parents' educational expectations
-* no mom/dad = mean
-```{r}
-mexp<-rowMeans(cbind(wave1$H1WP11, wave1$H1WP12), na.rm = TRUE)
-mean(mexp, na.rm = TRUE)
-mexp[which(as.numeric(spss1$H1WP11)==7)]<-4.341575 #no mom->0
-dexp<-rowMeans(cbind(wave1$H1WP15, wave1$H1WP16), na.rm = TRUE)
-mean(dexp, na.rm = TRUE)
-dexp[which(as.numeric(spss1$H1WP15)==7)]<-4.363035 #no dad->0
-
-summary(dexp)
-
-dat1$mexp<-mexp
-dat1$dexp<-dexp
-```
-
-shared activities (in general)
-* no mom/dad = mean
+Mother/father-adolescent shared activities (in general)
+* no resident mom/dad = mean
 ```{r}
 mtime1<-as.numeric(substr(wave1$H1WP17A, start = 2, stop = 2))
 mtime2<-as.numeric(substr(wave1$H1WP17B, start = 2, stop = 2))
@@ -339,7 +346,7 @@ dat1$dactiv<-dtime
 
 Parental control
 * reverse-coded
-*no parent = mean
+*no resident parent = mean
 ```{r}
 control1<-1-as.numeric(substr(wave1$H1WP1, start = 2, stop = 2))
 control2<-1-as.numeric(substr(wave1$H1WP2, start = 2, stop = 2))
@@ -389,67 +396,68 @@ dspv[which(as.numeric(spss1$H1RF11)==8)]<-1.100092
 dat1$mspv<-mspv
 dat1$dspv<-dspv
 ```
-
-Mother/father-adolescent relationship quality
+### Parental involvement with education
+Mother/father involvement with schoolwork
+* no resident mom/dad = mean
 ```{r}
-mrel1<-as.numeric(substr(wave1$H1WP9, start = 2, stop = 2))
-mrel2<-as.numeric(substr(wave1$H1WP10, start = 2, stop = 2))
-mrel3<-6-as.numeric(substr(wave1$H1PF1, start = 2, stop = 2))
-mrel4<-6-as.numeric(substr(wave1$H1PF4, start = 2, stop = 2))
-mrel5<-6-as.numeric(substr(wave1$H1PF5, start = 2, stop = 2))
-mrel<-rowMeans(cbind(mrel1, mrel2, mrel3, mrel4, mrel5), na.rm = TRUE)
-mean(mrel, na.rm=TRUE)
-mrel[which(as.numeric(spss1$H1WP9)==7)]<-4.430109 #no mom
+minvolve1<-as.numeric(substr(wave1$H1WP17H, start = 2, stop = 2))
+minvolve2<-as.numeric(substr(wave1$H1WP17I, start = 2, stop = 2))
+minvolve3<-as.numeric(substr(wave1$H1WP17J, start = 2, stop = 2))
+minvolve<-minvolve1+minvolve2+minvolve3
+mean(minvolve, na.rm = TRUE)
+minvolve[which(as.numeric(spss1$H1WP17H)==4)]<-1.280745 #no mom
+summary(as.factor(minvolve))
 
-drel1<-as.numeric(substr(wave1$H1WP13, start = 2, stop = 2))
-drel2<-as.numeric(substr(wave1$H1WP14, start = 2, stop = 2))
-drel3<-6-as.numeric(substr(wave1$H1PF23, start = 2, stop = 2))
-drel4<-6-as.numeric(substr(wave1$H1PF24, start = 2, stop = 2))
-drel5<-6-as.numeric(substr(wave1$H1PF25, start = 2, stop = 2))
-drel<-rowMeans(cbind(drel1, drel2, drel3, drel4, drel5), na.rm = TRUE)
-mean(drel, na.rm=TRUE)
-drel[which(as.numeric(spss1$H1WP13)==7)]<-4.243704
+dinvolve1<-as.numeric(substr(wave1$H1WP18H, start = 2, stop = 2))
+dinvolve2<-as.numeric(substr(wave1$H1WP18I, start = 2, stop = 2))
+dinvolve3<-as.numeric(substr(wave1$H1WP18J, start = 2, stop = 2))
+dinvolve<-dinvolve1+dinvolve2+dinvolve3
+mean(dinvolve, na.rm = TRUE)
+dinvolve[which(as.numeric(spss1$H1WP18H)==4)]<- 1.068472 #no dad
+summary(as.factor(dinvolve))
 
-dat1$mrel<-mrel
-dat1$drel<-drel
+dat1$minvolve<-minvolve
+dat1$dinvolve<-dinvolve
 ```
 
-family social support (Ryabov, 2016)
+parent involvement in PTA
 ```{r}
-levels(wave1$H1PR3)
-levels(wave1$H1PR5)
-levels(wave1$H1PR7)
-levels(wave1$H1PR8)
-famsup1<-as.numeric(substr(wave1$H1PR3, start = 2, stop = 2))
-famsup1[which(famsup1==6)]<-NA #"does not apply"
-famsup2<-as.numeric(substr(wave1$H1PR5, start = 2, stop = 2))
-famsup2[which(famsup2==6)]<-NA #"does not apply"
-famsup3<-as.numeric(substr(wave1$H1PR7, start = 2, stop = 2))
-famsup3[which(famsup3==6)]<-NA #"does not apply"
-famsup4<-as.numeric(substr(wave1$H1PR8, start = 2, stop = 2))
-famsup4[which(famsup4==6)]<-NA #"does not apply"
-
-famsup<-rowMeans(cbind(famsup1, famsup2, famsup3, famsup4), na.rm = TRUE)
-dat1$famsup<-famsup
+levels(wave1$PA27A)
+PAPTA<-as.numeric(substr(wave1$PA27A, start = 2, stop = 2))
+dat1$PAPTA<-PAPTA
 ```
 
-
-Parent presence at evening meal
-*no parent = mean
+Parent in school fund-raising
 ```{r}
-levels(spss1$H1WP8)
-dinner<-as.numeric(substr(wave1$H1WP8, start = 2, stop = 2)) 
-mean(dinner, na.rm=TRUE)
-dinner[which(as.numeric(spss1$H1WP8)==10)]<-4.608819
-dat1$dinner<-dinner
-```
-intergenerational closure
-```{r}
-levels(wave1$PC17)
-PAclosure<-as.numeric(substr(wave1$PC17, start = 2, stop = 2))
-dat1$PAclosure<-PAclosure
+levels(spss1$PC28)
+PAfund<-as.numeric(substr(wave1$PC28, start = 2, stop = 2))
+dat1$PAfund<-PAfund
 ```
 
+Parent met teachers
+```{r}
+levels(wave1$PC27)
+PAteacher<-as.numeric(substr(wave1$PC27, start = 2, stop = 2))
+dat1$PAteacher<-PAteacher
+```
+
+Adolescents' perceptions of mother/father educational expectations
+* no resident mom/dad = mean
+```{r}
+mexp<-rowMeans(cbind(wave1$H1WP11, wave1$H1WP12), na.rm = TRUE)
+mean(mexp, na.rm = TRUE)
+mexp[which(as.numeric(spss1$H1WP11)==7)]<-4.341575 #no mom->0
+dexp<-rowMeans(cbind(wave1$H1WP15, wave1$H1WP16), na.rm = TRUE)
+mean(dexp, na.rm = TRUE)
+dexp[which(as.numeric(spss1$H1WP15)==7)]<-4.363035 #no dad->0
+
+summary(dexp)
+
+dat1$mexp<-mexp
+dat1$dexp<-dexp
+```
+
+### Family sociocultural characteristics
 Parent nativity
 *No mom/dad code as mean
 ```{r}
@@ -468,86 +476,6 @@ dat1$mnativity<-YmomUSborn
 dat1$dnativity<-YdadUSborn
 ```
 
-
-
-parent self-rated health
-* reverse-coded
-```{r}
-levels(wave1$PA58)
-PAhealth<-6-as.numeric(substr(wave1$PA58, start = 2, stop = 2))
-dat1$PAhealth<-PAhealth
-```
-
-parent smoke
-```{r}
-levels(wave1$PA64)
-PAsmoke<-as.numeric(substr(wave1$PA64, start = 2, stop = 2))
-PAsmoke[which(as.numeric(spss1$PA64)==4)]<-0 #legitimate skip-> no smokers in family
-summary(as.factor(PAsmoke))
-dat1$PAsmoke<-PAsmoke
-```
-
-Parent alcoholic (household)
-```{r}
-BioMomAlc<-as.numeric(substr(wave1$PC49E_2, start = 2, stop = 2))
-BioDadAlc<-as.numeric(substr(wave1$PC49E_3, start = 2, stop = 2))
-malcohol<-rep(NA, 6504)
-malcohol[(which(BioMom==1 & BioMomAlc==1))]<-1
-malcohol[(which(BioMom==1 & BioMomAlc==0))]<-0
-mean(malcohol, na.rm=TRUE)
-malcohol[which(Mother==0)]<-0.0141125
-summary(as.factor(malcohol))
-
-dalcohol<-rep(NA, 6504)
-dalcohol[(which(BioDad==1 & BioDadAlc==1))]<-1
-dalcohol[(which(BioDad==1 & BioDadAlc==0))]<-0
-mean(dalcohol, na.rm=TRUE)
-dalcohol[which(Father==0)]<-0.06048632
-summary(as.factor(dalcohol))
-
-dat1$malcohol<-malcohol
-dat1$dalcohol<-dalcohol
-```
-
-Parent obese (household)
-```{r}
-BioMomObese<-as.numeric(substr(wave1$PC49A_2, start = 2, stop = 2))
-BioDadObese<-as.numeric(substr(wave1$PC49A_3, start = 2, stop = 2))
-MomObese<-rep(NA, 6504)
-MomObese[(which(BioMom==1 & BioMomObese==1))]<-1
-MomObese[(which(BioMom==1 & BioMomObese==0))]<-0
-mean(MomObese, na.rm=TRUE)
-MomObese[which(Mother==0)]<-0.1901437
-summary(as.factor(MomObese))
-
-DadObese<-rep(NA, 6504)
-DadObese[(which(BioDad==1 & BioDadObese==1))]<-1
-DadObese[(which(BioDad==1 & BioDadObese==0))]<-0
-mean(DadObese, na.rm=TRUE)
-DadObese[which(Father==0)]<-0.1414504
-summary(as.factor(DadObese))
-
-dat1$mobese<-MomObese
-dat1$dobese<-DadObese
-```
-
-Mother/father disabled
-*No mom/dad code as mean
-```{r}
-mdisable<-as.numeric(substr(wave1$H1RM10, start = 2, stop = 2))
-mean(mdisable, na.rm = TRUE)
-mdisable[which(as.numeric(spss1$H1RM10)==4)]<- 0.04313021
-summary(as.factor(mdisable))
-
-ddisable<-as.numeric(substr(wave1$H1RF10, start = 2, stop = 2))
-mean(ddisable, na.rm = TRUE)
-ddisable[which(as.numeric(spss1$H1RF10)==4)]<- 0.05724351
-summary(as.factor(ddisable))
-
-dat1$mdisable<-mdisable
-dat1$ddisable<-ddisable
-```
-
 Parent religiosity
 * no religion--coded as lowest (Stokes, 2008)
 * reverse-coded
@@ -562,25 +490,6 @@ PArelig<-rowMeans(cbind(PArelig1, PArelig2), na.rm = TRUE)
 dat1$PArelig<-PArelig
 ```
 
-Smoker(s) in household
-```{r}
-HHsmoke<-as.numeric(substr(wave1$PA63, start = 2, stop = 2))
-dat1$HHsmoke<-HHsmoke
-```
-
-Illegal drugs in household
-```{r}
-HHdrug<-as.numeric(substr(wave1$H1TO52, start = 2, stop = 2))
-dat1$HHdrug<-HHdrug
-```
-
-Family access to medical care (reverse-coded)
-```{r}
-fammed<-5-as.numeric(substr(wave1$PA59, start = 2, stop = 2))
-summary(as.factor(fammed))
-dat1$fammed<-fammed
-```
-
 English as home language
 ```{r}
 EnglishHome<-as.numeric(substr(wave1$H1GI10, start = 2, stop = 2))
@@ -588,7 +497,17 @@ EnglishHome[which(EnglishHome==2|EnglishHome==3)]<-0
 dat1$EnglishHome<-EnglishHome
 ```
 
-
+Adolescent nativity
+```{r}
+bornUS<-as.numeric(substr(wave1$H1GI11, start = 2, stop = 2))
+for(i in 1:6504){
+  if(!is.na(wave1$H1GI3[i])&wave1$H1GI3[i]==0){
+    bornUS[i]<-1
+  }
+}
+summary(bornUS)
+dat1$nativity<-bornUS
+```
 
 Race/Ethnicity
 ```{r}
@@ -613,83 +532,108 @@ dat1$Asian<-Asian
 dat1$other_race<-Other
 ```
 
-Born in U.S.
+### Family health resources and behaviors
+parent self-rated health
+* reverse-coded
 ```{r}
-bornUS<-as.numeric(substr(wave1$H1GI11, start = 2, stop = 2))
-for(i in 1:6504){
-  if(!is.na(wave1$H1GI3[i])&wave1$H1GI3[i]==0){
-    bornUS[i]<-1
-  }
-}
-summary(bornUS)
-dat1$nativity<-bornUS
+levels(wave1$PA58)
+PAhealth<-6-as.numeric(substr(wave1$PA58, start = 2, stop = 2))
+dat1$PAhealth<-PAhealth
 ```
 
+parent smoke
 ```{r}
-Wave1Vars<-dat1
-write.csv(Wave1Vars, "Wave1Vars.csv", row.names = FALSE)
-Wave1Vars<-read.csv("Wave1Vars.csv")
+levels(wave1$PA64)
+PAsmoke<-as.numeric(substr(wave1$PA64, start = 2, stop = 2))
+PAsmoke[which(as.numeric(spss1$PA64)==4)]<-0 #legitimate skip-> no smokers in family
+summary(as.factor(PAsmoke))
+dat1$PAsmoke<-PAsmoke
 ```
 
-
-weights at wave IV
+Mother/father alcoholic (resident)
 ```{r}
-load("Wave4Weights.rda") #Use Wave IV weights instead! See example w/ Wave III data: Perreira, Krista M.; Harris, Kathleen Mullan; & Lee, Dohoon. (2006).
-Wave4Weights<-da21600.0031
+BioMomAlc<-as.numeric(substr(wave1$PC49E_2, start = 2, stop = 2))
+BioDadAlc<-as.numeric(substr(wave1$PC49E_3, start = 2, stop = 2))
+malcohol<-rep(NA, 6504)
+malcohol[(which(BioMom==1 & BioMomAlc==1))]<-1
+malcohol[(which(BioMom==1 & BioMomAlc==0))]<-0
+mean(malcohol, na.rm=TRUE)
+malcohol[which(Mother==0)]<-0.0141125
+summary(as.factor(malcohol))
+
+dalcohol<-rep(NA, 6504)
+dalcohol[(which(BioDad==1 & BioDadAlc==1))]<-1
+dalcohol[(which(BioDad==1 & BioDadAlc==0))]<-0
+mean(dalcohol, na.rm=TRUE)
+dalcohol[which(Father==0)]<-0.06048632
+summary(as.factor(dalcohol))
+
+dat1$malcohol<-malcohol
+dat1$dalcohol<-dalcohol
+```
+
+Mother/father disabled
+*No resident mom/dad code as mean
+```{r}
+mdisable<-as.numeric(substr(wave1$H1RM10, start = 2, stop = 2))
+mean(mdisable, na.rm = TRUE)
+mdisable[which(as.numeric(spss1$H1RM10)==4)]<- 0.04313021
+summary(as.factor(mdisable))
+
+ddisable<-as.numeric(substr(wave1$H1RF10, start = 2, stop = 2))
+mean(ddisable, na.rm = TRUE)
+ddisable[which(as.numeric(spss1$H1RF10)==4)]<- 0.05724351
+summary(as.factor(ddisable))
+
+dat1$mdisable<-mdisable
+dat1$ddisable<-ddisable
+```
+
+Mother/Father obese (resident)
+```{r}
+BioMomObese<-as.numeric(substr(wave1$PC49A_2, start = 2, stop = 2))
+BioDadObese<-as.numeric(substr(wave1$PC49A_3, start = 2, stop = 2))
+MomObese<-rep(NA, 6504)
+MomObese[(which(BioMom==1 & BioMomObese==1))]<-1
+MomObese[(which(BioMom==1 & BioMomObese==0))]<-0
+mean(MomObese, na.rm=TRUE)
+MomObese[which(Mother==0)]<-0.1901437
+summary(as.factor(MomObese))
+
+DadObese<-rep(NA, 6504)
+DadObese[(which(BioDad==1 & BioDadObese==1))]<-1
+DadObese[(which(BioDad==1 & BioDadObese==0))]<-0
+mean(DadObese, na.rm=TRUE)
+DadObese[which(Father==0)]<-0.1414504
+summary(as.factor(DadObese))
+
+dat1$mobese<-MomObese
+dat1$dobese<-DadObese
+```
+
+Smoker(s) in household
+```{r}
+HHsmoke<-as.numeric(substr(wave1$PA63, start = 2, stop = 2))
+dat1$HHsmoke<-HHsmoke
+```
+
+Illegal drugs in household
+```{r}
+HHdrug<-as.numeric(substr(wave1$H1TO52, start = 2, stop = 2))
+dat1$HHdrug<-HHdrug
+```
+
+Family access to medical care (reverse-coded)
+```{r}
+fammed<-5-as.numeric(substr(wave1$PA59, start = 2, stop = 2))
+summary(as.factor(fammed))
+dat1$fammed<-fammed
+```
+
+Merging Wave I variables & Wave IV weights
+```{r}
 Wave4Weights_c<-Wave4Weights[c('AID', 'GSWGT4_2')]
-dat14<-merge(Wave1Vars, Wave4Weights_c, by = 'AID')
-```
-
-
-Educational attainment at Wave 4
-```{r}
-load("Wave4InHome.rda")
-wave4<-da21600.0022
-dat4_re<-wave4[c("AID")]
-education<-as.numeric(substr(wave4$H4ED2, start = 2, stop = 3)) #highest level of education
-atschool<-as.numeric(substr(wave4$H4ED6, start = 2, stop = 2))
-#dichotomize into: college entry vs. not; college completion vs. not
-collen_di<-rep(NA, 5114)
-collen_di[which(education<6)]<-0  #34.08%
-collen_di[which(education>=6)]<-1 #65.89%
-summary(as.factor(collen_di))
-
-collcom_di<-rep(NA,5114)
-collcom_di[which(education<7)]<-0  #67.36%
-collcom_di[which(education>=7)]<-1 #32.61%
-collcom_di[which(atschool==1 & education==6)]<-NA
-summary(as.factor(collcom_di))
-
-dat4_re$collen_di<-collen_di
-dat4_re$collcom_di<-collcom_di
-
-dat4_re<-dat4_re[!is.na(dat4_re$collen_di),]
-
-write.csv(dat4_re, "dat4_re.csv", row.names = FALSE)
-```
-
-```{r}
-names(dat14)
-summary(dat14$GSWGT4_2)
-weighted.mean(dat14$YAge, dat14$GSWGT4_2, na.rm=TRUE)
-weighted.mean(dat14$PAage, dat14$GSWGT4_2, na.rm=TRUE)
-library(SDMTools)
-wt.sd(dat14$YAge, dat14$GSWGT4_2)
-wt.sd(dat14$PAage, dat14$GSWGT4_2)
-
-library(weights)
-wpct(dat14$biosex, weight = dat14$GSWGT4_2)
-wpct(dat14$Latino, weight = dat14$GSWGT4_2)
-wpct(dat14$AA, weight = dat14$GSWGT4_2)
-wpct(dat14$Native, weight = dat14$GSWGT4_2)
-wpct(dat14$Asian, weight = dat14$GSWGT4_2)
-wpct(dat14$other_race, weight = dat14$GSWGT4_2)
-Nonwhite<-dat14$Latino+dat14$AA+dat14$Native+dat14$Asian+dat14$other_race
-wpct(Nonwhite, weight = dat14$GSWGT4_2)
-
-PArelation<-as.numeric(wave1[wave1$AID %in% dat14$AID, ]$PC1)
-wpct(PArelation, weight = dat14$GSWGT4_2)
-8.902268e-01+2.010799e-02+1.501366e-02+1.745411e-03
+dat14<-merge(dat1, Wave4Weights_c, by = 'AID')
 ```
 
 Check correlations to check if there's high multicollinearity
@@ -707,6 +651,32 @@ for(i in 2:55){
 ```
 
 
+## 3. Selecting and creating the outcome variables (i.e., college enrollment and college graduation/ completiong).
+```{r}
+dat4_re<-wave4[c("AID")]
+education<-as.numeric(substr(wave4$H4ED2, start = 2, stop = 3)) #highest level of education
+atschool<-as.numeric(substr(wave4$H4ED6, start = 2, stop = 2))
+#dichotomize into: college entry vs. not; college completion vs. not
+collen_di<-rep(NA, 5114)
+collen_di[which(education<6)]<-0  #34.08%
+collen_di[which(education>=6)]<-1 #65.89%
+summary(as.factor(collen_di))
+
+collcom_di<-rep(NA,5114)
+collcom_di[which(education<7)]<-0  #67.36%
+collcom_di[which(education>=7)]<-1 #32.61%
+collcom_di[which(atschool==1 & education==6)]<-NA  #for college graduation, delete those who reported 'some college' and were still attending college
+summary(as.factor(collcom_di))
+
+dat4_re$collen_di<-collen_di
+dat4_re$collcom_di<-collcom_di
+
+dat4_re<-dat4_re[!is.na(dat4_re$collen_di),]
+
+write.csv(dat4_re, "dat4_re.csv", row.names = FALSE)
+```
+
+##4. Handling missing data and sample weighting.
 Multiple imputation?
 ```{r}
 #first, select cases where they are not missing on dat4 outcomes
@@ -778,15 +748,9 @@ impdat4_re<-completedData_re[completedData_re$.imp==4, -2]
 impdat5_re<-completedData_re[completedData_re$.imp==5, -2]
 ```
 
-For parsimony given two algorithms and nested cross-validation to run,
-here just take the mean or majority vote
-
 ```{r}
-dat1_re3<-read.csv("dat1_re3.csv")
+#For parsimony given two algorithms and nested cross-validation to run, here just take the mean or majority vote
 dat1_re3_mi<-dat1_re3
-```
-
-```{r}
 factorname<-c("Mother" , "Father", "TwoBioParent", "PAassistance", "welfare", "PAeconhard", "PAPTA", "mnativity", "dnativity" , "PAsmoke", "malcohol", "dalcohol", "mobese", "dobese"  ,"mdisable" , "ddisable", "HHsmoke", "HHdrug", "EnglishHome", "biosex", "Latino", "AA", "Native", "Asian", "other_race", "nativity" )
 for(j in 2:54){
   for(i in 1:4598){
@@ -806,7 +770,7 @@ sapply(dat1_re3_mi, function(x) sum(is.na (x))) #all complete
 write.csv(dat1_re3_mi, "dat1_re3_mi.csv", row.names = FALSE)
 ```
 
-Then select weights and Ys
+Output data for ML analysis
 ```{r}
 collen<-dat4_re[!is.na(dat4_re$collen_di) & dat4_re$AID %in% dat1_re3_mi$AID, c(1,2)]
 collcom_re<-dat4_re[!is.na(dat4_re$collcom_di) & dat4_re$AID %in% dat1_re3_mi$AID, c(1,3)]
@@ -823,15 +787,44 @@ write.csv(weights4_collen, "weights4_collen.csv", row.names = FALSE)
 write.csv(weights4_collcom, "weights4_collcom.csv", row.names = FALSE)
 dat1_collen<-read.csv("dat1_collen.csv")
 dat1_collcom<-read.csv("dat1_collcom.csv")
+```
 
-#chance levels
+
+## 5. Preliminary analysis for descriptives (weighted).
+Wave I predictors
+```{r}
+names(dat14)
+summary(dat14$GSWGT4_2)
+weighted.mean(dat14$YAge, dat14$GSWGT4_2, na.rm=TRUE)
+weighted.mean(dat14$PAage, dat14$GSWGT4_2, na.rm=TRUE)
+library(SDMTools)
+wt.sd(dat14$YAge, dat14$GSWGT4_2)
+wt.sd(dat14$PAage, dat14$GSWGT4_2)
+
+library(weights)
+wpct(dat14$biosex, weight = dat14$GSWGT4_2)
+wpct(dat14$Latino, weight = dat14$GSWGT4_2)
+wpct(dat14$AA, weight = dat14$GSWGT4_2)
+wpct(dat14$Native, weight = dat14$GSWGT4_2)
+wpct(dat14$Asian, weight = dat14$GSWGT4_2)
+wpct(dat14$other_race, weight = dat14$GSWGT4_2)
+Nonwhite<-dat14$Latino+dat14$AA+dat14$Native+dat14$Asian+dat14$other_race
+wpct(Nonwhite, weight = dat14$GSWGT4_2)
+
+PArelation<-as.numeric(wave1[wave1$AID %in% dat14$AID, ]$PC1)
+wpct(PArelation, weight = dat14$GSWGT4_2)
+8.902268e-01+2.010799e-02+1.501366e-02+1.745411e-03
+```
+
+Wave IV outcome variables
+```{r}
+#outcome prediction chance levels
 (sum(collen$collen_di==0)/length(collen$collen_di))^2 + (sum(collen$collen_di==1)/length(collen$collen_di))^2  #54.82%
 (sum(collcom_re$collcom_di==0)/length(collcom_re$collcom_di))^2 + (sum(collcom_re$collcom_di==1)/length(collcom_re$collcom_di))^2  #54.24%
 
 #chance levels-weighted!
 collen<-read.csv("collen.csv")
 weights4_collen<-read.csv("weights4_collen.csv")
-library(weights)
 wpct(collen$collen_di, weight = weights4_collen$GSWGT4_2) # 0.3705646 0.6294354 
 collcom_re<-read.csv("collcom_re.csv")
 weights4_collcom<-read.csv("weights4_collcom.csv")
@@ -845,4 +838,9 @@ wpct(collcom_re$collcom_di, weight = weights4_collcom$GSWGT4_2)
 1-(0.3705646^2+0.6294354^2)
 1-(0.6676525^2+0.3323475^2)
 ```
+
+
+
+
+
 
