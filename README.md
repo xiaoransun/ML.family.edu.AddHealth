@@ -19,7 +19,7 @@ The particular datasets used in this study are listed below. You can find the 'D
   * We used the R version for this data.
 * DS31 Wave IV: Public Use Weights
   * We used the R version for this data.
-<br>
+
 For a detailed description of this sample, please refer to the "Participants" section in the manuscript.
 <br>
 
@@ -33,7 +33,7 @@ This step includes:
   * multiple imputation for the remaining missingness, with the R `mice` package.
 * Selecting and creating the college enrollment and college completing variables.
 * Preliminary analysis for descriptives with the sample weights.
-<br>
+
 Descriptions of this procedure can also be found in the "Measures" and "Data preparation"
 <br>
 
