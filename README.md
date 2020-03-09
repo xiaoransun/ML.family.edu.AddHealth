@@ -12,6 +12,7 @@ This paper uses public dataset (Wave I and Wave IV) of National Longitudinal Stu
 <br>
 We followed the instructions to download data from [ICPSR](https://www.icpsr.umich.edu/icpsrweb/ICPSR/studies/21600?archive=ICPSR&q=21600).
 <br>
+<br>
 The particular datasets used in this study are listed below. You can find the 'Download' option under the 'Data & Documentation' tab at the ICPSR data repository.
 * DS1 Wave I: In-Home Questionnaire, Public Use Sample
   * We used both the R and SPSS versions of the data because the SPSS version has more information regarding the missing data pattern.
@@ -20,7 +21,7 @@ The particular datasets used in this study are listed below. You can find the 'D
 * DS31 Wave IV: Public Use Weights
   * We used the R version for this data.
 
-For a detailed description of this sample, please refer to the "Participants" section in the manuscript.
+For a detailed description of this sample, please refer to the **Participants** section in the manuscript.
 <br>
 
 ### Step 1: Pre-processing the data.
@@ -34,7 +35,7 @@ This step includes:
 * Selecting and creating the college enrollment and college completing variables.
 * Preliminary analysis for descriptives with the sample weights.
 
-Descriptions of this procedure can also be found in the "Measures" and "Data preparation"
+Descriptions of this procedure can also be found in the **Measures** and **Data preparation**
 <br>
 
 
