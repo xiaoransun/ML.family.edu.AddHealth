@@ -33,23 +33,33 @@ load("Wave1InHome.rda")
 wave1<-da21600.0001
 spss1<-data.frame(read.spss("21600-0001-Data.sav"))
 dat1<-wave1[c("AID")] #create this data called 'dat1', where all the cleaned variables will be stored
-
+                      #6504 observations
 ##
 
 ```
 
-## Wave 1 
-### Family structure
-Parent presence; biological parents
+## 2. Selecting and creating family-related variables from Wave I
+The variables (in total, 55) include:
+* Family and adolescent demographic characteristics (9 variables)
+* Family socioeconomic characteristics (8 variables);
+* Family and parent-adolescent relationship characteristics (10 variables);
+* Parental involvement with education (7 variables);
+* Family sociocultural characteristics (10 variables);
+* Family health resources and behaviors (11 variables).
+
+### Family and adolescent demographic characteristics
+Resident mother/father presence
 ```{r}
-HasMom<-rep(1, 6504)
-HasMom[which(as.numeric(spss1$H1RM1)==14)]<-0
-HasDad<-rep(1, 6504)
-HasDad[which(as.numeric(spss1$H1RF1)==14)]<-0
+Mother<-rep(1, 6504)
+Mother[which(as.numeric(spss1$H1RM1)==14)]<-0
+Father<-rep(1, 6504)
+Father[which(as.numeric(spss1$H1RF1)==14)]<-0
 
-dat1$Mother<-HasMom
-dat1$Father<-HasDad
-
+dat1$Mother<-Mother
+dat1$Father<-Father
+```
+Resident with two biological parents
+```{r}
 levels(spss1$H1NM1)
 BioMom<-rep(NA, 6504)
 BioMom[which(as.numeric(spss1$H1NM1)==4)]<-1
@@ -112,7 +122,13 @@ head(as.numeric(spss1$H1HR3A))
 dat1$SibNum<-SibNum
 ```
 
-Biological Birth Order
+parent age
+```{r}
+head(wave1$PA2)  #responded by parents
+dat1$PAage<-wave1$PA2
+```
+
+Birth Order
 ```{r}
 BirthOrder<-rep(NA, 6504)
 levels(spss1$H1HR14)
@@ -125,35 +141,41 @@ BirthOrder[which(as.numeric(spss1$H1HR15)>=4 & as.numeric(spss1$H1HR15)<=14)]<-4
 summary(as.factor(BirthOrder))
 dat1$BirthOrder<-BirthOrder
 ```
-
-Parent education (resident parents)
-* no mom/dad code as mean 
+Biological Sex, Age
 ```{r}
-#youth report
-Ymomeduc1<-as.numeric(substr(wave1$H1RM1, start = 2, stop = 3)) 
-Ymomeduc1[which(Ymomeduc1==10)]<-1 #never went to school
-Ymomeduc1[which(Ymomeduc1==9)]<-8
-Ymomeduc1[which(Ymomeduc1==11|Ymomeduc1==12)]<-NA
-mean(Ymomeduc1, na.rm = TRUE)
-length(spss1[as.numeric(spss1$H1RM1)==14,]$AID) #legitimate skip
-Ymomeduc1[which(as.numeric(spss1$H1RM1)==14)]<- 5.435109 #no resident mom
-summary(as.factor(Ymomeduc1))
-
-
-Ydadeduc1<-as.numeric(substr(wave1$H1RF1, start = 2, stop = 3)) 
-Ydadeduc1[which(Ydadeduc1==10)]<-1 #never went to school
-Ydadeduc1[which(Ydadeduc1==9)]<-8
-Ydadeduc1[which(Ydadeduc1==11|Ydadeduc1==12)]<-NA
-mean(Ydadeduc1, na.rm = TRUE)
-length(spss1[as.numeric(spss1$H1RF1)==14,]$AID) #legitimate skip
-Ydadeduc1[which(as.numeric(spss1$H1RF1)==14)]<- 5.523199 #no resident mom
-summary(as.factor(Ydadeduc1))
-
-dat1$momeduc<-Ymomeduc1
-dat1$dadeduc<-Ydadeduc1
+dat1$biosex<-as.numeric(substr(wave1$BIO_SEX, start=2, stop = 2))-1
+wave1$YAge<-(as.numeric(wave1$IYEAR)+1993)- (as.numeric(wave1$H1GI1Y)+1973)+((as.numeric(substr(wave1$IMONTH, start=2, stop=3)))-(as.numeric(substr(wave1$H1GI1M, start=2, stop=3))))/12
+dat1$YAge<-wave1$YAge
 ```
 
-Parent occupation
+### Family socioeconomic characteristics
+Mother/father education levels (resident parents)
+* no resident mom/dad code as mean 
+```{r}
+#youth report
+momeduc<-as.numeric(substr(wave1$H1RM1, start = 2, stop = 3)) 
+momeduc[which(momeduc==10)]<-1 #never went to school
+momeduc[which(momeduc==9)]<-8
+momeduc[which(momeduc==11|momeduc==12)]<-NA
+mean(momeduc, na.rm = TRUE)
+length(spss1[as.numeric(spss1$H1RM1)==14,]$AID) #legitimate skip
+momeduc[which(as.numeric(spss1$H1RM1)==14)]<- 5.435109 #no resident mom
+summary(as.factor(momeduc))
+
+dadeduc<-as.numeric(substr(wave1$H1RF1, start = 2, stop = 3)) 
+dadeduc[which(dadeduc==10)]<-1 #never went to school
+dadeduc[which(dadeduc==9)]<-8
+dadeduc[which(dadeduc==11|dadeduc==12)]<-NA
+mean(dadeduc, na.rm = TRUE)
+length(spss1[as.numeric(spss1$H1RF1)==14,]$AID) #legitimate skip
+dadeduc[which(as.numeric(spss1$H1RF1)==14)]<- 5.523199 #no resident dad
+summary(as.factor(dadeduc))
+
+dat1$momeduc<-momeduc
+dat1$dadeduc<-dadeduc
+```
+
+Mother/Father occupational prestige
 * recode into five ordered categories (Feliciano & Lanuza, 2017):
   professionals, office/sales workers, blue-collar workers, crafts/military/farm/other, and unemployed (5 to 1)
 * Note: No mom/dad code as mean
@@ -186,12 +208,12 @@ dat1$momjob<-Ymomjob_re
 dat1$dadjob<-Ydadjob_re
 ```
 
-family income (in thousand, log)
+Family income (in thousand, log)
 ```{r}
 dat1$faminc<-log(wave1$PA55+1)
 ```
 
-parent receiving public assistance
+Parent receiving public assistance
 ```{r}
 PAassistance<-as.numeric(substr(wave1$PA21, start = 2, stop = 2))
 dat1$PAassistance<-PAassistance
@@ -211,9 +233,12 @@ dat1$welfare<-welfare
 Parent economic hardship;
 ```{r}
 levels(spss1$PA56)
-PAecohard<-1-as.numeric(substr(wave1$PA56, start = 2, stop = 2))
-dat1$PAecohard<-PAecohard
+PAeconhard<-1-as.numeric(substr(wave1$PA56, start = 2, stop = 2))
+dat1$PAeconhard<-PAeconhard
 ```
+
+### Family and parent-adolescent relationship characteristics
+______________________________________________________________________
 
 parental involvement with schoolwork
 * no mom/dad = mean
@@ -443,11 +468,7 @@ dat1$mnativity<-YmomUSborn
 dat1$dnativity<-YdadUSborn
 ```
 
-parent age
-```{r}
-head(wave1$PA2)  #responded by parents
-dat1$PAage<-wave1$PA2
-```
+
 
 parent self-rated health
 * reverse-coded
@@ -474,14 +495,14 @@ malcohol<-rep(NA, 6504)
 malcohol[(which(BioMom==1 & BioMomAlc==1))]<-1
 malcohol[(which(BioMom==1 & BioMomAlc==0))]<-0
 mean(malcohol, na.rm=TRUE)
-malcohol[which(HasMom==0)]<-0.0141125
+malcohol[which(Mother==0)]<-0.0141125
 summary(as.factor(malcohol))
 
 dalcohol<-rep(NA, 6504)
 dalcohol[(which(BioDad==1 & BioDadAlc==1))]<-1
 dalcohol[(which(BioDad==1 & BioDadAlc==0))]<-0
 mean(dalcohol, na.rm=TRUE)
-dalcohol[which(HasDad==0)]<-0.06048632
+dalcohol[which(Father==0)]<-0.06048632
 summary(as.factor(dalcohol))
 
 dat1$malcohol<-malcohol
@@ -496,14 +517,14 @@ MomObese<-rep(NA, 6504)
 MomObese[(which(BioMom==1 & BioMomObese==1))]<-1
 MomObese[(which(BioMom==1 & BioMomObese==0))]<-0
 mean(MomObese, na.rm=TRUE)
-MomObese[which(HasMom==0)]<-0.1901437
+MomObese[which(Mother==0)]<-0.1901437
 summary(as.factor(MomObese))
 
 DadObese<-rep(NA, 6504)
 DadObese[(which(BioDad==1 & BioDadObese==1))]<-1
 DadObese[(which(BioDad==1 & BioDadObese==0))]<-0
 mean(DadObese, na.rm=TRUE)
-DadObese[which(HasDad==0)]<-0.1414504
+DadObese[which(Father==0)]<-0.1414504
 summary(as.factor(DadObese))
 
 dat1$mobese<-MomObese
@@ -567,14 +588,7 @@ EnglishHome[which(EnglishHome==2|EnglishHome==3)]<-0
 dat1$EnglishHome<-EnglishHome
 ```
 
-Biological Sex, Age
-```{r}
 
-dat1$biosex<-as.numeric(substr(wave1$BIO_SEX, start=2, stop = 2))-1
-wave1$YAge<-(as.numeric(wave1$IYEAR)+1993)- (as.numeric(wave1$H1GI1Y)+1973)+((as.numeric(substr(wave1$IMONTH, start=2, stop=3)))-(as.numeric(substr(wave1$H1GI1M, start=2, stop=3))))/12
-dat1$YAge<-wave1$YAge
-describe(dat1$YAge)
-```
 
 Race/Ethnicity
 ```{r}
@@ -735,7 +749,7 @@ write.csv(dat1_re3, "dat1_re3.csv", row.names = FALSE)
 Multiple imputation using mice
 ```{r}
 dat1_re3_toimpute<-dat1_re3[,-1] #delete ID
-cols<-c("Mother" , "Father", "TwoBioParent", "PAassistance", "welfare", "PAecohard", "PAPTA", "mnativity", "dnativity" , "PAsmoke", "malcohol", "dalcohol", "mobese", "dobese"  ,"mdisable" , "ddisable", "HHsmoke", "HHdrug", "EnglishHome", "biosex", "Latino", "AA", "Native", "Asian", "other_race", "nativity" )
+cols<-c("Mother" , "Father", "TwoBioParent", "PAassistance", "welfare", "PAeconhard", "PAPTA", "mnativity", "dnativity" , "PAsmoke", "malcohol", "dalcohol", "mobese", "dobese"  ,"mdisable" , "ddisable", "HHsmoke", "HHdrug", "EnglishHome", "biosex", "Latino", "AA", "Native", "Asian", "other_race", "nativity" )
 dat1_re3_toimpute[cols] <- lapply(dat1_re3_toimpute[cols], factor)
 library(mice)
 #rm(list=setdiff(ls(), "dat1_re3_toimpute"))
@@ -773,7 +787,7 @@ dat1_re3_mi<-dat1_re3
 ```
 
 ```{r}
-factorname<-c("Mother" , "Father", "TwoBioParent", "PAassistance", "welfare", "PAecohard", "PAPTA", "mnativity", "dnativity" , "PAsmoke", "malcohol", "dalcohol", "mobese", "dobese"  ,"mdisable" , "ddisable", "HHsmoke", "HHdrug", "EnglishHome", "biosex", "Latino", "AA", "Native", "Asian", "other_race", "nativity" )
+factorname<-c("Mother" , "Father", "TwoBioParent", "PAassistance", "welfare", "PAeconhard", "PAPTA", "mnativity", "dnativity" , "PAsmoke", "malcohol", "dalcohol", "mobese", "dobese"  ,"mdisable" , "ddisable", "HHsmoke", "HHdrug", "EnglishHome", "biosex", "Latino", "AA", "Native", "Asian", "other_race", "nativity" )
 for(j in 2:54){
   for(i in 1:4598){
     if(is.na(dat1_re3_mi[i,j])){
