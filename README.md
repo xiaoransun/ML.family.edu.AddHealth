@@ -32,10 +32,10 @@ This step includes:
 * Missing data imputation, with
   * mean imputation for the legitimate skips
   * multiple imputation for the remaining missingness, with the R `mice` package.
-* Selecting and creating the college enrollment and college completing variables.
-* Preliminary analysis for descriptives with the sample weights.
+* Selecting and creating the college enrollment and college completion variables.
+* Preliminary analysis for descriptives (weighted).
 
-Descriptions of this procedure can also be found in the **Measures** and **Data preparation**
+Descriptions of this procedure can also be found in the **Measures** and **Data preparation** sections in the manuscript.
 <br>
 
 
