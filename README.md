@@ -42,6 +42,8 @@ Descriptions of this procedure can also be found in the **Measures** and **Data 
 This step includes:
 * Tuning, training, and testing regularized logistic regression and random forests models in predicting college enrollment and college graduation with the 53 family experience variables, using stratified nested cross-validation (5-fold; see visualization below)
 
+![alt text](https://github.com/xiaoransun/ML.family.edu.AddHealth/blob/master/visualization/nested%205-fold%20cross-validation.jpg "nested cross-validation")
+
 Descriptions of this procedure can also be found in the ** ** and ** ** sections in the manuscript.
 <br>
 
