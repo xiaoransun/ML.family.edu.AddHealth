@@ -38,6 +38,12 @@ This step includes:
 Descriptions of this procedure can also be found in the **Measures** and **Data preparation** sections in the manuscript.
 <br>
 
+### Step 2: Machine learning models and partial dependence plot.
+This step includes:
+* Tuning, training, and testing regularized logistic regression and random forests models in predicting college enrollment and college graduation with the 53 family experience variables, using stratified nested cross-validation (5-fold; see visualization below)
+
+Descriptions of this procedure can also be found in the ** ** and ** ** sections in the manuscript.
+<br>
 
 
 
