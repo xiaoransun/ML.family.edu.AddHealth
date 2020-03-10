@@ -38,15 +38,28 @@ This step includes:
 Descriptions of this procedure can also be found in the **Measures** and **Data preparation** sections in the manuscript.
 <br>
 
-### Step 2: Machine learning models and partial dependence plot.
-This step includes:
+### Step 2: Tuning, training and testing machine learning models predicting educational attainment.
+This step is to answer the question, "Do family experiences in adolescence predict college enrollment and graduation in young adulthood?", which includes:
 * Tuning, training, and testing regularized logistic regression and random forests models in predicting college enrollment and college graduation with the 53 family experience variables, using stratified nested cross-validation (5-fold; see visualization below)
+* Calculating AUC and Accuray for each algorithm predicting each outcome
+
+Codes for this step include (one Jupyter markdown for each outcome variable and each algorithm):
+* `02-1_collen_LR.ipynb` college enrollment, regularized logistic regression
+* `02-2_collen_RF.ipynb` college enrollment, random forests
+* `02-3_collcom_LR.ipynb` college completion (i.e., graduation), regularized logistic regression
+* `02-3_collcom_LR.ipynb` college completion (i.e., graduation), random forests
+
+This step corresponds to the **Method--Data Analysis--Question1** and **Results--Do Family Experiences in Adolescence Predict Educational Attainment in Young Adulthood?** sections in the manuscript.
+<br>
 
 <img src="https://github.com/xiaoransun/ML.family.edu.AddHealth/blob/master/visualization/nested%205-fold%20cross-validation.jpg" alt="nested cross-validation" width="800">
 
 
-Descriptions of this procedure can also be found in the ** ** and ** ** sections in the manuscript.
-<br>
+
+
+* feature importance and selection
+
+* Following the random forests training-testing, 2D and 3D partial dependence plots to visualize nonlinear and/or interactive effects between features/predictors
 
 
 
