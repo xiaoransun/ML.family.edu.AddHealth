@@ -47,7 +47,7 @@ Codes for this step include (one Jupyter markdown for each outcome variable and 
 * `02-1_collen_LR.ipynb` college enrollment, regularized logistic regression
 * `02-2_collen_RF.ipynb` college enrollment, random forests
 * `02-3_collcom_LR.ipynb` college completion (i.e., graduation), regularized logistic regression
-* `02-3_collcom_LR.ipynb` college completion (i.e., graduation), random forests
+* `02-4_collcom_RF.ipynb` college completion (i.e., graduation), random forests
 
 This step corresponds to the **Method--Data Analysis--Question1** and **Results--Do Family Experiences in Adolescence Predict Educational Attainment in Young Adulthood?** sections in the manuscript.
 <br>
