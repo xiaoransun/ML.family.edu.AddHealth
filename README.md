@@ -60,11 +60,11 @@ This step is to answer the question, "Which family experience factors are key pr
 * Conduct recursive feature elimination (RFE) to identify the set of predictors that remained in models with prediction accuracy equivalent to the original model that included all predictors. 
 
 Codes for this step include:
-* `03-1_FeatureImportance_collen` feature importance and RFE for predicting college enrollment
-* `03-2_FeatureImportance_collcom` feature importance and RFE for predicting college graduation
+* `03-1_FeatureImportance_collen.ipynb` feature importance and RFE for predicting college enrollment
+* `03-2_FeatureImportance_collcom.ipynb` feature importance and RFE for predicting college graduation
+* `03-3_FeatureImportantPlotting.rmd` Plot feature importance using ggplot2 in R (Figures S1 & S2 in the manuscript supplemental material)
 
-
-
+This step corresponds to the **Method--Data Analysis--Question2** and **Results--Which Family Experiences Are Key Predictors of Educational Attainment?** sections in the manuscript.
 
 
 
