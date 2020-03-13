@@ -59,7 +59,11 @@ This step is to answer the question, "Which family experience factors are key pr
 * Compute feature importance of all the 53 predictors in the trained logistic regression and random forests mdoels predicting college enrollment and graduation, respectively.
 * Conduct recursive feature elimination (RFE) to identify the set of predictors that remained in models with prediction accuracy equivalent to the original model that included all predictors. 
 
-Codes for this step can 
+Codes for this step include:
+* `03-1_FeatureImportance_collen` feature importance and RFE for predicting college enrollment
+* `03-2_FeatureImportance_collcom` feature importance and RFE for predicting college graduation
+
+
 
 
 
