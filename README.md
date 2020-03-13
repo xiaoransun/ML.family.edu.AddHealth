@@ -25,8 +25,6 @@ For a detailed description of this sample, please refer to the **Participants** 
 <br>
 
 ### Step 1: Pre-processing the data.
-See `01_DataPreProcessing.rmd` for detailed instructions, codes and annotations. <br>
-<br>
 This step includes:
 * Selecting and creating the 55 identified family variables from the raw data
 * Missing data imputation, with
@@ -34,6 +32,8 @@ This step includes:
   * multiple imputation for the remaining missingness, with the R `mice` package.
 * Selecting and creating the college enrollment and college completion variables.
 * Preliminary analysis for descriptives (weighted).
+
+See `01_DataPreProcessing.rmd` for detailed instructions, codes and annotations. <br>
 
 Descriptions of this procedure can also be found in the **Measures** and **Data preparation** sections in the manuscript.
 <br>
@@ -53,6 +53,13 @@ This step corresponds to the **Method--Data Analysis--Question1** and **Results-
 <br>
 
 <img src="https://github.com/xiaoransun/ML.family.edu.AddHealth/blob/master/visualization/nested%205-fold%20cross-validation.jpg" alt="nested cross-validation" width="800">
+
+### Step 3: Selecting the best predictors-- feature importance and recursive feature elimination
+This step is to answer the question, "Which family experience factors are key predictors of young adult educational attainment?", which includes:
+* Compute feature importance of all the 53 predictors in the trained logistic regression and random forests mdoels predicting college enrollment and graduation, respectively.
+* Conduct recursive feature elimination (RFE) to identify the set of predictors that remained in models with prediction accuracy equivalent to the original model that included all predictors. 
+
+Codes for this step can 
 
 
 
