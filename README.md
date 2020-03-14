@@ -68,7 +68,7 @@ This step corresponds to the **Method--Data Analysis--Question2** and **Results-
 
 
 
-* feature importance and selection
+### Step 4
 
 * Following the random forests training-testing, 2D and 3D partial dependence plots to visualize nonlinear and/or interactive effects between features/predictors
 
