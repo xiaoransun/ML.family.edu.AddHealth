@@ -1,0 +1,155 @@
+---
+title: "03-3_FeatureImportantPlotting"
+author: "Xiaoran Sun"
+output: html_document
+---
+### Loading package; Loading features' full name (instead of variable names)
+```{r}
+library(ggplot2)
+dat1_realname<-c('AID', 'Resident mother presence', 'Resident father presence', 'Resident with two biological parents', 'Household size', 'Number of siblings', 'Birth order', 'Mother education level', 'Father education level', 'Mother occupational prestige', 'Father occupational prestige', 'Family income (log)', 'Parent receiving public assistance', 'Family receive welfare', 'Parent economic hardship', 'Mother involvement with schoolwork', 'Father involvement with schoolwork', 'Parent in parent-teacher association', 'Mother educational expectations', 'Father educational expectations', 'Mother-adolescent shared activities', 'Father-adolescent shared activities', 'Parental control', 'Mother supervision', 'Father supervision', 'Mother-adolescent relationship quality', 'Father-adolescent relationship quality', 'Family social support', 'Shared dinner with parents', 'Intergenerational closure', 'Mother nativity', 'Father nativity', 'Parent age', 'Parent health', 'Parent smoking', 'Mother alcoholic', 'Father alcoholic', 'Mother obese', 'Father obese', 'Mother disabled', 'Father disabled', 'Parent religiosity', 'Smoker(s) in household', 'Illegal drugs in household', 'Family access to medical care', 'English as home language', 'Biological sex', 'Adolescent age', 'Latino', 'African American', 'Native American', 'Asian', 'Other race', 'Adolescent nativity')
+
+```
+
+### Loading in feature importance indices:
+College enrollment:
+- Logistic regression
+```{r}
+collen_coefs<- c(1.42633603e-01,  1.20438476e-01,  1.39723296e-01,
+        -2.27712767e-01,  1.47097379e-01, -1.68615538e-01,
+         3.60749326e-01,  3.83731322e-01,  2.05618163e-01,
+        -9.41343641e-03,  1.15471268e-01, -2.27190867e-02,
+        -1.25648278e-01,  4.85187571e-03,  1.43666272e-02,
+        -1.16774065e-02,  1.76856550e-01,  1.51605973e-01,
+         3.57142587e-02,  7.67080141e-02,  7.46026833e-02,
+        -1.04630775e-01,  5.52752635e-02,  1.19830234e-02,
+        -2.71458743e-02, -2.87647584e-02,  6.18242722e-03,
+         8.38472947e-02,  1.25181963e-01, -5.00402348e-02,
+        -2.27179142e-01,  1.24681271e-01, -9.21720985e-03,
+        -1.47715773e-02,  5.90045089e-03, -3.29008638e-04,
+        -3.04432181e-02,  5.13772905e-02,  1.34791841e-02,
+        -3.10656075e-02,  4.42363074e-02, -1.90753405e-01,
+        -3.20938494e-02,  8.63709127e-02,  2.98781852e-02,
+         4.14414836e-01, -2.60718582e-03, -6.25875355e-02,
+        -9.57452374e-02, -1.49786949e-02,  6.20282075e-02,
+         1.36926659e-02, -2.09928087e-02)
+collen_coefs_abs<-abs(collen_coefs)
+
+collen_features_lr<-rev(dat1_realname[order(collen_coefs_abs, decreasing = TRUE)+1])
+collen_coefs<-rev(collen_coefs[order(collen_coefs_abs, decreasing = TRUE)])
+collen_abs<-rev(collen_coefs_abs[order(collen_coefs_abs, decreasing = TRUE)])
+df_collen_lr<-data.frame(as.matrix(cbind(collen_features_lr, collen_coefs, collen_abs)), stringsAsFactors = FALSE)
+df_collen_lr$collen_coefs<-as.numeric(df_collen_lr$collen_coefs)
+df_collen_lr$collen_abs<-as.numeric(df_collen_lr$collen_abs)
+df_collen_lr$dir<-sign(df_collen_lr$collen_coefs)
+
+df_collen_lr$collen_features_lr<-factor(df_collen_lr$collen_features_lr, levels = collen_features_lr)
+
+
+ggplot(data=df_collen_lr, aes(x = collen_features_lr , y = collen_abs, fill = factor(dir))) +
+  geom_bar(stat = "identity", width = 0.7, position = position_dodge(width = 0.9))+
+  scale_fill_manual(breaks = levels(df_collen_lr$dir), values = c("steelblue3", "violetred3"))+
+  ylab("Standardized Coefficients (Absolute Value)")+
+  theme(axis.title.y=element_blank(), text=element_text(size = 17, face = "bold", family="Times New Roman"))+
+ # xlab("Features")+
+  coord_flip()
+```
+
+- Random forest
+```{r}
+collen_imps<-c(0.00157968, 0.00223384, 0.00754626, 0.02242236, 0.01457813,
+       0.01603242, 0.08950534, 0.07752299, 0.03546622, 0.02275906,
+       0.0786938 , 0.00999613, 0.02342269, 0.00558624, 0.01419212,
+       0.01139455, 0.0220062 , 0.03394702, 0.02554528, 0.02991906,
+       0.02190101, 0.02131752, 0.0127501 , 0.01274953, 0.02511061,
+       0.02008029, 0.02699613, 0.02142226, 0.02849022, 0.00428305,
+       0.00540046, 0.04019128, 0.01906911, 0.01163015, 0.00230902,
+       0.00516925, 0.00614974, 0.00554656, 0.00414777, 0.0049137 ,
+       0.02179035, 0.02514599, 0.00227305, 0.01696262, 0.00234275,
+       0.02315115, 0.04438293, 0.0045783 , 0.0053999 , 0.00292386,
+       0.00192332, 0.0031412 , 0.00200744)
+
+collen_features_rf<-rev(dat1_realname[order(collen_imps, decreasing = TRUE)+1])
+collen_imps_c<-rev(collen_imps[order(collen_imps, decreasing = TRUE)])
+df_collen_rf<-data.frame(as.matrix(cbind(collen_features_rf, collen_imps_c)), stringsAsFactors = FALSE)
+df_collen_rf$collen_imps_c<-as.numeric(df_collen_rf$collen_imps_c)
+df_collen_rf$collen_features_rf<-factor(df_collen_rf$collen_features_rf, levels = collen_features_rf)
+
+ggplot(data=df_collen_rf, aes(x = collen_features_rf , y = collen_abs)) +
+  geom_bar(stat = "identity", width = 0.7, position = position_dodge(width = 0.9), fill = "green4")+
+  ylab("Feature Importance")+
+  theme(axis.title.y=element_blank(),text=element_text(size = 17, face = "bold", family="Times New Roman"))+
+ # xlab("Features")+
+  coord_flip()
+```
+
+College completion/graduation:
+- Logistic regression
+```{r}
+collcom_coefs<- c(6.71865973e-02, -3.76906176e-03,  3.39376066e-01,
+        -1.66165670e-01,  1.60084416e-01, -1.82987860e-01,
+         3.42472023e-01,  3.63131145e-01,  1.79790358e-01,
+         9.91083617e-02,  2.40727357e-01, -4.57043365e-02,
+        -2.00765338e-01, -3.35262289e-04,  2.52859743e-02,
+        -4.35156097e-02,  2.22581565e-01,  2.07644030e-01,
+         3.70083446e-02,  1.34433278e-01,  2.66570181e-02,
+        -2.06784067e-01,  2.95255019e-02, -4.80048670e-02,
+        -5.86858199e-02,  8.78230729e-03,  6.42943646e-02,
+         1.39633179e-01,  1.76589292e-01, -9.38534070e-02,
+        -1.71047326e-01,  2.31035644e-01,  7.25829749e-02,
+         1.00923274e-02,  1.22504229e-01, -6.93860030e-02,
+        -1.77951181e-01, -2.41075946e-02,  3.65480242e-02,
+        -7.11843398e-03,  1.03883747e-01, -2.60583068e-01,
+        -7.23753110e-03,  1.49715788e-01, -7.95935075e-02,
+         3.34228723e-01, -1.25632602e-02, -1.20259482e-02,
+         3.04800497e-03, -9.31440927e-02,  4.85441420e-02,
+        -1.08303004e-01, -1.19546873e-02)
+collcom_coefs_abs<-abs(collcom_coefs)
+
+collcom_features_lr<-rev(dat1_realname[order(collcom_coefs_abs, decreasing = TRUE)+1])
+collcom_coefs<-rev(collcom_coefs[order(collcom_coefs_abs, decreasing = TRUE)])
+collcom_abs<-rev(collcom_coefs_abs[order(collcom_coefs_abs, decreasing = TRUE)])
+df_collcom_lr<-data.frame(as.matrix(cbind(collcom_features_lr, collcom_coefs, collcom_abs)), stringsAsFactors = FALSE)
+df_collcom_lr$collcom_coefs<-as.numeric(df_collcom_lr$collcom_coefs)
+df_collcom_lr$collcom_abs<-as.numeric(df_collcom_lr$collcom_abs)
+df_collcom_lr$dir<-sign(df_collcom_lr$collcom_coefs)
+
+df_collcom_lr$collcom_features_lr<-factor(df_collcom_lr$collcom_features_lr, levels = collcom_features_lr)
+
+ggplot(data=df_collcom_lr, aes(x = collcom_features_lr , y = collcom_abs, fill = factor(dir))) +
+  geom_bar(stat = "identity", width = 0.7, position = position_dodge(width = 0.9))+
+  scale_fill_manual(breaks = levels(df_collcom_lr$dir), values = c("steelblue3", "violetred3"))+
+  ylab("Standardized Coefficients (Absolute Value)")+
+ # xlab("Features")+
+   theme(axis.title.y=element_blank(), text=element_text(size = 17, face = "bold", family="Times New Roman"))+
+  coord_flip()
+```
+
+- Random forest: 
+```{r}
+collcom_imps<-c(0.00105762, 0.00241967, 0.01554598, 0.01901996, 0.01490152,
+       0.01465082, 0.07323428, 0.08120128, 0.03303374, 0.03664194,
+       0.08608557, 0.00220953, 0.00963789, 0.00538525, 0.01520856,
+       0.01346362, 0.02753122, 0.0264172 , 0.02728583, 0.02961248,
+       0.02351501, 0.02314612, 0.01412188, 0.01342547, 0.02543537,
+       0.02321866, 0.02740294, 0.0233161 , 0.0314942 , 0.00454668,
+       0.00492913, 0.04661555, 0.019688  , 0.00979208, 0.00292013,
+       0.00488002, 0.00877326, 0.00550656, 0.00346041, 0.00473503,
+       0.02489526, 0.02667114, 0.00136658, 0.01304498, 0.00208116,
+       0.01314024, 0.04332406, 0.00385492, 0.0051044 , 0.00245644,
+       0.00298447, 0.00256903, 0.00304077)
+
+collcom_features_rf<-rev(dat1_realname[order(collcom_imps, decreasing = TRUE)+1])
+collcom_imps_c<-rev(collcom_imps[order(collcom_imps, decreasing = TRUE)])
+df_collcom_rf<-data.frame(as.matrix(cbind(collcom_features_rf, collcom_imps_c)), stringsAsFactors = FALSE)
+df_collcom_rf$collcom_imps_c<-as.numeric(df_collcom_rf$collcom_imps_c)
+df_collcom_rf$collcom_features_rf<-factor(df_collcom_rf$collcom_features_rf, levels = collcom_features_rf)
+
+ggplot(data=df_collcom_rf, aes(x = collcom_features_rf , y = collcom_abs)) +
+   geom_bar(stat = "identity", width = 0.7, position = position_dodge(width = 0.9), fill = "green4")+
+  ylab("Feature Importance")+
+ # xlab("Features")+
+  theme(axis.title.y=element_blank(), text=element_text(size = 17, face = "bold", family="Times New Roman"))+
+  coord_flip()
+```
+
+
