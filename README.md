@@ -71,8 +71,8 @@ This step corresponds to the **Method--Data Analysis--Question 2** and **Results
 This step is to answer the question, "What complex patterns, including nonlinearities and interactions involving this set of family factors, merit further examination?" <br>
 Here, following the random forests training-testing, 2D and 3D partial dependence plots (PDPs) are made to visualize nonlinear and/or interactive effects between features/predictors. <br>
 Codes for this step include:
-* `04-1_PDP_collen.ipynd` PDPs for random forests model predicting college enrollment
-* `04-2_PDP_collcom.ipynd` PDPs for random forests model predicting college graduation
+* `04-1_PDP_collen.ipynb` PDPs for random forests model predicting college enrollment
+* `04-2_PDP_collcom.ipynb` PDPs for random forests model predicting college graduation
 
 In particular, within this interactive notebook, you can plug in the selected features and obtain the PDP to your interest!
 
