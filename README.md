@@ -1,9 +1,9 @@
 ## Adolescent Family Experiences Predict Young Adult Educational Attainment: A Data-Based Cross-Study Synthesis With Machine Learning
-<p align=center>Xiaoran Sun, Nilam Ram, and Susan M. McHale, <i>in press</i> <br>
-The Pennsylvania State University <br></p>
 
 Documentation of programming scripts for the cross-study synthesis on adolescents' family experiences as predictors of young adult educational attainment with machine learning, based on Add Health data. <br>
-Paper in press at Journal of Child and Family Studies. <br>
+Paper <i>in press</i> at <i>Journal of Child and Family Studies</i>. <br>
+Authors: Xiaoran Sun, Nilam Ram, and Susan M. McHale, at The Pennsylvania State University
+
 <br>
 The purpose of this GitHub repository is:
 * To share the codes for data pre-processing, machine learning models training and testing, and visualization for the paper, thereby other researchers can replicate this study.
